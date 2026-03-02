@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مطعم الشيف — مأكولات بحرية فاخرة</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("UvL5Xtn8mytwIGbCG");</script>
 <style>
 :root {
   --gold: #C9A84C;
@@ -503,7 +505,7 @@ footer { padding:50px 60px;display:flex;justify-content:space-between;align-item
   <div class="contact-item reveal reveal-d2">
     <span class="contact-icon">📞</span>
     <div class="contact-label">تواصل معنا</div>
-    <div class="contact-val">+20 100 000 0000<br>info@alchef.com</div>
+    <div class="contact-val">+20 100 000 0000<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d8b1b6beb798b9b4bbb0bdbef6bbb7b5">[email&#160;protected]</a></div>
   </div>
   <div class="contact-item reveal reveal-d3">
     <span class="contact-icon">🕐</span>
@@ -524,7 +526,7 @@ footer { padding:50px 60px;display:flex;justify-content:space-between;align-item
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // API Base — locally uses relative path, on Vercel works automatically
 const API = '';
 
@@ -638,36 +640,31 @@ async function submitForm(e){
   btn.disabled = true;
 
   try {
-    let result;
+    // Send email via EmailJS
+    await emailjs.send("service_8rn1ati", "template_se5eeob", {
+      name:     data.name,
+      phone:    data.phone,
+      date:     data.date,
+      time:     data.time,
+      guests:   data.guests,
+      occasion: data.occasion || 'عشاء عادي',
+      notes:    data.notes || '—'
+    });
+
+    // Also try to save to backend
     try {
-      const res = await fetch(`${API}/api/reservations`, {
+      await fetch(`${API}/api/reservations`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(data)
       });
-      result = await res.json();
-    } catch(err) {
-      // Fallback if backend not connected
-      result = { success:true, message:`تم تأكيد حجزك يا ${data.name}! في انتظارك يوم ${data.date} الساعة ${data.time}` };
-    }
+    } catch(err) { /* backend optional */ }
 
-    if(result.success){
-      msg.style.display='block';
-      msg.textContent='✅ ' + result.message;
-      msg.style.borderColor='var(--gold)';
-      msg.style.color='var(--gold)';
-      form.reset();
-    }
+    msg.style.display='block';
+    msg.textContent=`✅ تم تأكيد حجزك يا ${data.name}! في انتظارك يوم ${data.date} الساعة ${data.time}`;
+    msg.style.borderColor='var(--gold)';
+    msg.style.color='var(--gold)';
+    form.reset();
+
   } catch(err){
     msg.style.display='block';
-    msg.textContent='⚠️ حدث خطأ، يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة';
-    msg.style.borderColor='#ff4444';
-    msg.style.color='#ff4444';
-  }
-
-  btn.textContent='✦ تأكيد الحجز ✦';
-  btn.disabled=false;
-  setTimeout(()=>msg.style.display='none', 6000);
-}
-</script>
-</body>
-</html>
+    msg.textContent='⚠️ حدث خطأ، يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة'
